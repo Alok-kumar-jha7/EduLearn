@@ -14,7 +14,8 @@ import {
   Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-// import React, { useState, useEffect } from 'react';
+import AuthScreen from './screens/AuthScreen';
+import { coursesData, lessonsData, studentsData, profileData } from './data/sampleData';
 
 const { width, height } = Dimensions.get('window');
 
@@ -37,35 +38,12 @@ const mockAuth = {
   }
 };
 
-// Sample Data
-const coursesData = [
-  { id: '1', title: 'Mathematics', progress: 75, lessons: 20, image: '' },
-  { id: '2', title: 'Science', progress: 60, lessons: 15, image: '' },
-  { id: '3', title: 'English', progress: 90, lessons: 25, image: '' },
-  { id: '4', title: 'History', progress: 45, lessons: 18, image: '' },
-];
-
-const lessonsData = [
-  { id: '1', title: 'Introduction to Algebra', duration: '15 min', completed: true },
-  { id: '2', title: 'Linear Equations', duration: '20 min', completed: true },
-  { id: '3', title: 'Quadratic Functions', duration: '25 min', completed: false },
-  { id: '4', title: 'Polynomials', duration: '30 min', completed: false },
-];
-
 const EduLearnApp = () => {
   const [currentScreen, setCurrentScreen] = useState('splash');
-  // type User = { uid: string; email: string; displayName: string };
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
-  // type Course = { id: string; title: string; progress: number; lessons: number; image: string };
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [showLessonModal, setShowLessonModal] = useState(false);
-
-  // Auth Forms State
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
-  const [isSignUp, setIsSignUp] = useState(false);
 
   useEffect(() => {
     // Simulate splash screen
@@ -74,41 +52,19 @@ const EduLearnApp = () => {
     }, 2000);
   }, []);
 
-  // Authentication Functions
-  const handleAuth = async () => {
-    if (!email || !password || (isSignUp && !name)) {
-      Alert.alert('Error', 'Please fill all fields');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      if (isSignUp) {
-        await mockAuth.signUp(email, password, name);
-      } else {
-        const result = await mockAuth.signIn(email, password);
-        setUser(result.user);
-      }
-      setCurrentScreen('main');
-      setEmail('');
-      setPassword('');
-      setName('');
-    } catch (error) {
-      const errorMessage = (error instanceof Error) ? error.message : 'An unknown error occurred';
-      Alert.alert('Error', errorMessage);
-    } finally {
-      setLoading(false);
-    }
+  const handleAuthSuccess = (userData) => {
+    setUser(userData);
+    setCurrentScreen('main');
   };
 
   const handleSignOut = async () => {
-    setLoading(true);
     try {
+      setLoading(true);
       await mockAuth.signOut();
       setUser(null);
       setCurrentScreen('auth');
     } catch (error) {
-      Alert.alert('Error', 'Failed to sign out');
+      Alert.alert('Error', 'Failed to sign out. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -126,79 +82,6 @@ const EduLearnApp = () => {
       <View style={styles.loadingContainer}>
         <Text style={styles.loadingText}>Loading...</Text>
       </View>
-    </View>
-  );
-
-  // Auth Screen
-  const AuthScreen = () => (
-    <View style={styles.authContainer}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-      <ScrollView contentContainerStyle={styles.authScrollView}>
-        <View style={styles.authHeader}>
-          <Ionicons name="school" size={60} color="#4F46E5" />
-          <Text style={styles.authTitle}>Welcome to EduLearn</Text>
-          <Text style={styles.authSubtitle}>
-            {isSignUp ? 'Create your account' : 'Sign in to continue'}
-          </Text>
-        </View>
-
-        <View style={styles.authForm}>
-          {isSignUp && (
-            <View style={styles.inputContainer}>
-              <Ionicons name="person-outline" size={20} color="#6B7280" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="Full Name"
-                value={name}
-                onChangeText={setName}
-                autoCapitalize="words"
-              />
-            </View>
-          )}
-
-          <View style={styles.inputContainer}>
-            <Ionicons name="mail-outline" size={20} color="#6B7280" style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Email Address"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-          </View>
-
-          <View style={styles.inputContainer}>
-            <Ionicons name="lock-closed-outline" size={20} color="#6B7280" style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Password"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-            />
-          </View>
-
-          <TouchableOpacity
-            style={[styles.authButton, loading && styles.authButtonDisabled]}
-            onPress={handleAuth}
-            disabled={loading}
-          >
-            <Text style={styles.authButtonText}>
-              {loading ? 'Please wait...' : (isSignUp ? 'Sign Up' : 'Sign In')}
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.switchAuthButton}
-            onPress={() => setIsSignUp(!isSignUp)}
-          >
-            <Text style={styles.switchAuthText}>
-              {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
     </View>
   );
 
@@ -502,7 +385,7 @@ const EduLearnApp = () => {
       case 'splash':
         return <SplashScreen />;
       case 'auth':
-        return <AuthScreen />;
+        return <AuthScreen onAuthSuccess={handleAuthSuccess} />;
       case 'main':
         return <MainApp />;
       default:
@@ -552,77 +435,6 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     color: '#FFFFFF',
-    fontSize: 16,
-  },
-
-  // Auth Screen Styles
-  authContainer: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-  },
-  authScrollView: {
-    flexGrow: 1,
-    paddingHorizontal: 24,
-    paddingTop: 60,
-  },
-  authHeader: {
-    alignItems: 'center',
-    marginBottom: 40,
-  },
-  authTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#111827',
-    marginTop: 20,
-  },
-  authSubtitle: {
-    fontSize: 16,
-    color: '#6B7280',
-    marginTop: 8,
-  },
-  authForm: {
-    width: '100%',
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    marginBottom: 16,
-    height: 50,
-  },
-  inputIcon: {
-    marginRight: 12,
-  },
-  input: {
-    flex: 1,
-    fontSize: 16,
-    color: '#111827',
-  },
-  authButton: {
-    backgroundColor: '#4F46E5',
-    borderRadius: 12,
-    height: 50,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 16,
-  },
-  authButtonDisabled: {
-    opacity: 0.6,
-  },
-  authButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  switchAuthButton: {
-    marginTop: 24,
-    alignItems: 'center',
-  },
-  switchAuthText: {
-    color: '#4F46E5',
     fontSize: 16,
   },
 

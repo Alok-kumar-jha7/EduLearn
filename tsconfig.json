@@ -10,6 +10,9 @@
   },
   "include": [
     "**/*.ts",
-    "**/*.tsx"
-, "app/EduLearnApp.jsx"  ]
+    "**/*.tsx",
+    "**/*.jsx",
+    "**/*.js",
+    "app/EduLearnApp.jsx"
+  ]
 }
